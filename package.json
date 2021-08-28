@@ -1,0 +1,10 @@
+{
+  "name": "web-scripts",
+  "private": "true",
+  "license": "MIT",
+  "author": "H4M5TER <zhuxx2003@gmail.com> (https://github.com/h4m5ter)",
+  "scripts": {},
+  "devDependencies": {
+    "eslint": "^7.32.0"
+  }
+}
