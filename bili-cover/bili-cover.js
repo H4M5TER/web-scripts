@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bili cover
 // @namespace    http://github.com/
-// @version      0.1
+// @version      0.1.1
 // @description  将视频右侧的广告替换为视频封面
 // @author       H4M5TER
 // @match        *://www.bilibili.com/video/*
@@ -12,39 +12,32 @@
 
 try {
   const getRect = el => {
-    let offsetLeft = 0, offsetTop = 0, offsetWidth = el ? el.offsetWidth : 0
+    let offsetLeft = 0, offsetTop = 0, offsetWidth = el ? el.offsetWidth : 320
     while (el && el.tagName !== 'body') {
       offsetLeft += el.offsetLeft
       offsetTop += el.offsetTop
       el = el.offsetParent
     }
     return {
-      offsetWidth: `${offsetWidth}px`,
-      offsetLeft: `${offsetLeft}px`,
-      offsetTop: `${offsetTop}px`
+      offsetWidth: offsetWidth,
+      offsetLeft: offsetLeft,
+      offsetTop: offsetTop
     }
   }
 
   let slide_ad = document.getElementById('slide_ad')
   let vcd = document.getElementsByClassName('vcd')[0]
-  let offsetLeft, offsetTop, offsetWidth //, offsetHeight
-  if (slide_ad && slide_ad.offsetParent) {
-    ({ offsetLeft, offsetTop, offsetWidth } = getRect(slide_ad))
-  }
-  else if (vcd && vcd.offsetParent) {
-    ({ offsetLeft, offsetTop, offsetWidth } = getRect(vcd))
-  }
-  else {
-    console.log('获取广告位置失败，脚本无法工作', slide_ad, vcd)
-  }
+  let vcdRect
+  if (vcd)
+    vcdRect = getRect(vcd)
+  else
+    console.log('定位失败，脚本无法正常工作')
   let cover = document.createElement('div')
   cover.id = 'bili-cover'
-  cover.style = 'position: absolute; width: 320px; height: auto; border-radius: 2px;'
-  if (offsetWidth) {
-    cover.style.width = offsetWidth
-  }
-  cover.style.left = offsetLeft
-  cover.style.top = offsetTop
+  cover.style = 'position: absolute; height: auto; border-radius: 2px;'
+  cover.style.width = `${vcdRect.offsetWidth}px`
+  cover.style.left = `${vcdRect.offsetLeft}px`
+  cover.style.top = `${vcdRect.offsetTop}px`
   cover.appendChild((() => {
     let img = document.createElement('img')
     img.style = 'height: auto; width: 100%; display: block;'
@@ -65,13 +58,14 @@ try {
     slide_ad.style.height = `${cover.offsetHeight}px`
   })
   requestAnimationFrame(function sync() {
-    // 同步位置 否则会挡住弹幕列表、接下来播放和推荐视频
-    cover.style.left = `${slide_ad.offsetLeft}px`
-    cover.style.top = `${slide_ad.offsetTop}px`
-    // 干掉没开广告屏蔽就会一直出的 vcd
-    let vcd = document.getElementsByClassName('vcd')[0]
-    if (vcd) {
-      vcd.parentNode.innerHTML = ''
+    vcd = document.getElementsByClassName('vcd')[0]
+    if (slide_ad?.offsetParent) {
+      cover.style.top = `${getRect(slide_ad).offsetTop}px`
+      if (vcd)
+        vcd.parentNode.innerHTML = ''
+    }
+    else if (vcd) {
+      cover.style.top = `${getRect(vcd).offsetTop}px`
     }
     requestAnimationFrame(sync)
   })
